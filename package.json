@@ -1,16 +1,29 @@
 {
   "name": "@jommar/markdown-reader",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": false,
   "license": "MIT",
   "type": "module",
   "description": "Local, read-only Markdown browser for large doc trees — rg-powered tree + search, faithful rendering.",
-  "keywords": ["markdown", "reader", "docs", "ripgrep", "vue", "vite"],
+  "keywords": [
+    "markdown",
+    "reader",
+    "docs",
+    "ripgrep",
+    "vue",
+    "vite"
+  ],
   "bin": {
     "markdown-reader": "./bin/markdown-reader.mjs",
     "mdr": "./bin/markdown-reader.mjs"
   },
-  "files": ["dist/", "bin/", "server/", "README.md", "LICENSE"],
+  "files": [
+    "dist/",
+    "bin/",
+    "server/",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=22.6"
   },
