@@ -1,0 +1,34 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:component
+      - run: npm run build
+      - name: Verify bin
+        run: |
+          node ./bin/markdown-reader.mjs --help
+          node ./bin/markdown-reader.mjs --version
+      - name: Pack dry-run
+        run: npm pack --dry-run
+      - name: Docker smoke (build only)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: ghcr.io/${{ github.repository }}:ci

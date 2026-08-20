@@ -1,0 +1,9 @@
+node_modules
+dist
+.orchestrator
+.playwright-mcp
+.git
+.gitignore
+*.log
+.DS_Store
+coverage

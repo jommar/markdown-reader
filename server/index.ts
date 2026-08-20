@@ -9,14 +9,25 @@ import type { OpenResult } from './types.ts'
 
 const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const PORT = Number(process.env.PORT ?? 5180)
+const HOST = process.env.HOST ?? '127.0.0.1'
 const isProd = process.env.NODE_ENV === 'production'
 
 function parseArgs(): { root?: string; open?: string } {
   const argv = process.argv.slice(2)
   const out: { root?: string; open?: string } = {}
   for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === '--root' && argv[i + 1]) out.root = argv[i + 1]
-    if (argv[i] === '--open' && argv[i + 1]) out.open = argv[i + 1]
+    if (argv[i] === '--root' && argv[i + 1]) {
+      out.root = argv[i + 1]
+      i++
+    } else if (argv[i] === '--open' && argv[i + 1]) {
+      out.open = argv[i + 1]
+      i++
+    } else if ((argv[i] === '--port' || argv[i] === '--host') && argv[i + 1]) {
+      // consumed by bin wrapper via env; skip here
+      i++
+    } else if (argv[i].startsWith('--port=') || argv[i].startsWith('--host=')) {
+      // already handled
+    }
   }
   return out
 }
@@ -81,8 +92,13 @@ async function main() {
     })
   }
 
-  server.listen(PORT, '127.0.0.1', () => {
-    console.log(`markdown-reader → http://127.0.0.1:${PORT}`)
+  // HOST defaults to 127.0.0.1 (local, DNS-rebinding safe). Docker sets HOST=0.0.0.0
+  // via the image ENV; guard stays strict (Host must be 127.0.0.1:<PORT>) so you
+  // should publish as -p 127.0.0.1:5180:5180 to keep it local.
+  const displayHost = HOST === '0.0.0.0' ? '127.0.0.1' : HOST
+  server.listen(PORT, HOST, () => {
+    console.log(`markdown-reader → http://${displayHost}:${PORT}`)
+    if (HOST === '0.0.0.0') console.log(`  (listening on 0.0.0.0:${PORT}, publish as -p 127.0.0.1:${PORT}:${PORT} to keep local)`)
   })
 }
 

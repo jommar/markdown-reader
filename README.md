@@ -39,6 +39,44 @@ Platform: Linux / macOS, Chrome is the reference browser.
 
 ## Quick Start
 
+### Zero-install (npx) — recommended for most people
+
+No clone needed, always the latest (scoped package — `markdown-reader` on npm is taken):
+
+```bash
+npx @jommar/markdown-reader --root /path/to/docs        # open a directory
+npx @jommar/markdown-reader --open /path/to/file.md     # root = dirname(file)
+npx @jommar/markdown-reader --port 3000 --root ./docs   # custom port
+npx @jommar/markdown-reader --help                      # help & version
+# after global install, short aliases work:
+# markdown-reader --root .   and   mdr --root .
+```
+
+### Global install
+
+```bash
+npm i -g @jommar/markdown-reader
+markdown-reader --root /path/to/docs
+mdr --open /path/to/file.md
+mdr --help
+```
+
+> Requires `ripgrep (rg)` on `PATH` and Node `>=22.6`. The bin prints a friendly install hint if `rg` is missing.
+
+### Docker (no Node needed)
+
+```bash
+docker pull ghcr.io/jommar/markdown-reader:latest
+docker run --rm -p 127.0.0.1:5180:5180 -v /path/to/docs:/docs ghcr.io/jommar/markdown-reader --root /docs
+docker run --rm -p 127.0.0.1:5180:5180 -v $(pwd):/docs ghcr.io/jommar/markdown-reader --open /docs/README.md
+# custom port:
+docker run --rm -p 127.0.0.1:3000:3000 -v /path/to/docs:/docs ghcr.io/jommar/markdown-reader --port 3000 --root /docs
+```
+
+Image is `node:22-slim` + `ripgrep`; keep `-p 127.0.0.1:5180:5180` (not `-p 5180:5180`) so the `Host` guard stays strict and the app stays local.
+
+### From source
+
 ```bash
 git clone https://github.com/jommar/markdown-reader.git
 cd markdown-reader
@@ -53,6 +91,7 @@ Seed the initial root/file from the CLI:
 npm run dev -- --root /path/to/docs        # open a directory
 npm run dev -- --open /path/to/file.md     # root = dirname(file), initialPath = basename
 PORT=3000 npm run dev                      # custom port
+HOST=0.0.0.0 npm run dev                    # bind all interfaces (guard still requires 127.0.0.1 Host)
 ```
 
 Production build (same server, serves `dist/`):
@@ -73,9 +112,12 @@ markdown-reader/
 ├── index.html                 # data-theme="dark", __MDR_TOKEN__ placeholder
 ├── vite.config.ts             # vue + tailwindcss/vite
 ├── tsconfig.json / tsconfig.node.json  # verbatimModuleSyntax, bundler, skipLibCheck
+├── bin/
+│   └── markdown-reader.mjs    # npx/global bin (also `mdr` alias) — --help/--version/rg check → tsx + server/index.ts
+├── Dockerfile                 # multi-stage build → ghcr.io/jommar/markdown-reader (node:22-slim + ripgrep)
 ├── server/
-│   ├── index.ts               # http + express + vite middleware, CLI args, 127.0.0.1 bind
-│   ├── guard.ts               # Host/Origin/Sec-Fetch-Site + x-mdr-token gate
+│   ├── index.ts               # http + express + vite middleware, CLI args, HOST/PORT bind (127.0.0.1 default, 0.0.0.0 in Docker)
+│   ├── guard.ts               # Host/Origin/Sec-Fetch-Site + x-mdr-token gate (strict 127.0.0.1 even behind Docker)
 │   ├── routes.ts              # /api/* handlers + error / 404
 │   ├── scan.ts                # rg --files → nested TreeNode[] + flat files
 │   ├── search.ts              # rg --json → windowed SearchResponse
