@@ -31,6 +31,13 @@ function hasClass(cls: unknown, value: string): boolean {
   return Array.isArray(cls) ? cls.includes(value) : cls === value
 }
 
+export function isMermaidLang(className: unknown): boolean {
+  if (Array.isArray(className)) {
+    return className.some((c) => String(c).toLowerCase() === 'language-mermaid')
+  }
+  return String(className ?? '').toLowerCase() === 'language-mermaid'
+}
+
 function isMermaidPre(node: Element): boolean {
   return hasClass(node.properties?.className, 'mermaid')
 }
@@ -42,7 +49,7 @@ export const mermaidPlugin: Plugin<[], Root> = () => (tree) => {
       (c): c is Element => c.type === 'element' && c.tagName === 'code',
     )
     if (!code) return
-    if (!hasClass(code.properties?.className, 'language-mermaid')) return
+    if (!isMermaidLang(code.properties?.className)) return
     const text = toString(code)
     const replacement: Element = {
       type: 'element',

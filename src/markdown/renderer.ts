@@ -71,7 +71,7 @@ export async function renderDocument(
   }
   const processor = buildProcessor(renderCtx, headings, { highlighting })
   const result = await processor.process(file.content)
-  const hasMermaid = /```mermaid/.test(file.content)
+  const hasMermaid = /```+\s*mermaid/i.test(file.content) || /~~~+\s*mermaid/i.test(file.content)
   return {
     html: sanitizeHtml(result.toString()),
     headings,
@@ -97,7 +97,7 @@ export async function renderRawMarkdown(
   }
   const processor = buildProcessor(renderCtx, headings, { highlighting })
   const result = await processor.process(content)
-  const hasMermaid = /```mermaid/.test(content)
+  const hasMermaid = /```+\s*mermaid/i.test(content) || /~~~+\s*mermaid/i.test(content)
   return {
     html: sanitizeHtml(result.toString()),
     headings,

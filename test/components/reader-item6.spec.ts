@@ -125,7 +125,7 @@ describe('Reader Item6 seams', () => {
   test('mermaid visibility:hidden shows error not blank and re-renders', async () => {
     const proseCss = fs.readFileSync('src/styles/prose.css', 'utf8')
     expect(proseCss).toMatch(/pre\.mermaid:not\(\[data-rendered\]\)/)
-    expect(proseCss).toMatch(/visibility:\s*hidden/)
+    expect(proseCss).toMatch(/mermaid-shimmer|shimmer|min-height:\s*6/)
     // mermaid.ts should set data-rendered, clear data-processed, and handle error per block
     const mermaidTs = fs.readFileSync('src/markdown/mermaid.ts', 'utf8')
     expect(mermaidTs).toMatch(/data-rendered/)

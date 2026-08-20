@@ -85,6 +85,10 @@ export function useShortcuts(handlers: ShortcutHandlers): void {
       return
     }
     if ((mod && ZOOM_KEYS.has(e.key)) || (mod && ZOOM_CODES.has(e.code))) {
+      // When mermaid fullscreen is open, let modal handle zoom keys exclusively
+      if (document.querySelector('.mermaid-fs-overlay')) return
+      const target = e.target as HTMLElement | null
+      if (target?.closest('pre.mermaid, .mermaid-fs-overlay')) return
       e.preventDefault()
       if (e.key === '=' || e.key === '+' || e.code === 'NumpadAdd') handlers.zoomIn()
       else if (e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract') handlers.zoomOut()
@@ -124,6 +128,10 @@ export function useShortcuts(handlers: ShortcutHandlers): void {
 
   const onWheel = (e: WheelEvent) => {
     if (e.ctrlKey) {
+      const target = e.target as HTMLElement | null
+      if (target?.closest('pre.mermaid, .mermaid-fs-overlay, .mermaid-fs-viewport')) return
+      // If any mermaid fullscreen is open, let it handle ctrl+wheel exclusively
+      if (document.querySelector('.mermaid-fs-overlay')) return
       e.preventDefault()
       if (e.deltaY < 0) handlers.zoomIn()
       else handlers.zoomOut()

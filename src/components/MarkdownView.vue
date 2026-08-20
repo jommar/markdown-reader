@@ -5,6 +5,7 @@ import { renderMermaid } from '../markdown/mermaid'
 import { useTabs } from '../stores/tabs'
 import { useWorkspace } from '../stores/workspace'
 import { usePrefs } from '../stores/prefs'
+import MermaidFullscreen from './MermaidFullscreen.vue'
 
 const props = defineProps<{
   doc: RenderedDoc
@@ -17,6 +18,58 @@ const tabs = useTabs()
 const workspace = useWorkspace()
 const prefs = usePrefs()
 const rootEl = ref<HTMLElement | null>(null)
+const fsOpen = ref(false)
+const fsSvg = ref('')
+const fsSource = ref('')
+const zoomMap = new WeakMap<HTMLElement, number>()
+
+function clampZoomLower(v: number) {
+  return Math.max(0.1, Math.round(v * 100) / 100)
+}
+
+function clampZoom(v: number) {
+  return Math.min(3, Math.max(0.5, Math.round(v * 100) / 100))
+}
+
+function getZoom(el: HTMLElement): number {
+  return zoomMap.get(el) ?? 1
+}
+
+function setZoom(el: HTMLElement, v: number, unbounded = false) {
+  const z = unbounded ? clampZoomLower(v) : clampZoom(v)
+  zoomMap.set(el, z)
+  el.style.setProperty('--mermaid-zoom', String(z))
+  const label = el.querySelector<HTMLElement>('.mermaid-zoom-label')
+  if (label) label.textContent = `${Math.round(z * 100)}%`
+  const outBtn = el.querySelector<HTMLButtonElement>('.mermaid-btn-zoom-out')
+  const inBtn = el.querySelector<HTMLButtonElement>('.mermaid-btn-zoom-in')
+  if (outBtn) outBtn.disabled = z <= (unbounded ? 0.1 : 0.5)
+  if (inBtn) inBtn.disabled = !unbounded && z >= 3
+}
+
+function computeInlineFit(el: HTMLElement): number | null {
+  const svg = el.querySelector('svg') as SVGSVGElement | null
+  if (!svg) return null
+  const currentZoom = getZoom(el) || 1
+  const rect = svg.getBoundingClientRect()
+  const naturalW = rect.width / currentZoom
+  const naturalH = rect.height / currentZoom
+  if (!naturalW || !naturalH) return null
+  const pad = 24 // matches prose.css padding 0.75rem*2 + border
+  const availW = el.clientWidth - pad
+  const availH = el.clientHeight - pad
+  // For inline, only width matters primarily; also consider height if tall
+  if (availW <= 0) return null
+  const fitW = availW / naturalW
+  // Always fill: use width fit even if it enlarges small diagrams
+  const fit = availH > 200 ? Math.min(fitW, availH / naturalH) : fitW
+  if (!Number.isFinite(fit) || fit <= 0) return null
+  return clampZoomLower(fit)
+}
+
+function getMermaidSource(el: HTMLElement): string {
+  return el.getAttribute('data-src') ?? el.querySelector('.mermaid-error-source code')?.textContent ?? el.textContent ?? ''
+}
 
 async function copyCode(btn: HTMLElement) {
   const code = btn.closest('.code-block')?.querySelector('code')?.textContent ?? ''
@@ -25,6 +78,63 @@ async function copyCode(btn: HTMLElement) {
     workspace.showCopyToast('Code copied')
   } catch {
     workspace.showCopyToast('Copy failed')
+  }
+}
+
+async function copyMermaidSource(el: HTMLElement) {
+  const src = getMermaidSource(el)
+  try {
+    await navigator.clipboard.writeText(src)
+    workspace.showCopyToast('Mermaid source copied')
+  } catch {
+    workspace.showCopyToast('Copy failed')
+  }
+}
+
+function enhanceMermaids() {
+  if (!rootEl.value) return
+  const pres = Array.from(rootEl.value.querySelectorAll<HTMLElement>('pre.mermaid[data-rendered]'))
+  for (const el of pres) {
+    if (el.querySelector('.mermaid-toolbar')) continue
+    // error blocks get a minimal copy in header, not full toolbar
+    if (el.hasAttribute('data-error')) {
+      const header = el.querySelector<HTMLElement>('.mermaid-error-header')
+      if (header && !header.querySelector('.mermaid-btn-copy')) {
+        const btn = document.createElement('button')
+        btn.type = 'button'
+        btn.className = 'mermaid-btn-copy'
+        btn.setAttribute('aria-label', 'Copy mermaid source')
+        btn.textContent = 'Copy'
+        btn.style.cssText = 'margin-left:0.5rem;background:var(--bg-elev);color:var(--fg-muted);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.15em 0.5em;font-size:0.72rem;cursor:pointer;'
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          copyMermaidSource(el)
+        })
+        header.appendChild(btn)
+      }
+      continue
+    }
+    const toolbar = document.createElement('div')
+    toolbar.className = 'mermaid-toolbar'
+    toolbar.setAttribute('role', 'toolbar')
+    toolbar.setAttribute('aria-label', 'Mermaid controls')
+    toolbar.innerHTML = `
+      <button type="button" class="mermaid-btn-copy" aria-label="Copy mermaid source">Copy</button>
+      <button type="button" class="mermaid-btn-zoom-out" aria-label="Zoom out">−</button>
+      <span class="mermaid-zoom-label">100%</span>
+      <button type="button" class="mermaid-btn-zoom-in" aria-label="Zoom in">+</button>
+      <button type="button" class="mermaid-btn-zoom-reset" aria-label="Reset zoom">Fit</button>
+      <button type="button" class="mermaid-btn-fullscreen" aria-label="Fullscreen">⛶</button>
+    `
+    el.appendChild(toolbar)
+    const hint = document.createElement('span')
+    hint.className = 'mermaid-hint'
+    hint.textContent = 'Ctrl+wheel to zoom · drag to pan'
+    el.appendChild(hint)
+    const z = getZoom(el)
+    el.style.setProperty('--mermaid-zoom', String(z))
+    const label = toolbar.querySelector<HTMLElement>('.mermaid-zoom-label')
+    if (label) label.textContent = `${Math.round(z * 100)}%`
   }
 }
 
@@ -76,6 +186,46 @@ function onClick(e: MouseEvent) {
     emit('show-all')
     return
   }
+  const mermaidEl = target.closest('pre.mermaid') as HTMLElement | null
+  if (mermaidEl) {
+    if (target.closest('.mermaid-btn-copy')) {
+      e.preventDefault()
+      e.stopPropagation()
+      copyMermaidSource(mermaidEl)
+      return
+    }
+    if (target.closest('.mermaid-btn-zoom-in')) {
+      e.preventDefault()
+      e.stopPropagation()
+      setZoom(mermaidEl, getZoom(mermaidEl) + 0.15, true)
+      return
+    }
+    if (target.closest('.mermaid-btn-zoom-out')) {
+      e.preventDefault()
+      e.stopPropagation()
+      setZoom(mermaidEl, getZoom(mermaidEl) - 0.15, true)
+      return
+    }
+    if (target.closest('.mermaid-btn-zoom-reset')) {
+      e.preventDefault()
+      e.stopPropagation()
+      const fit = computeInlineFit(mermaidEl)
+      if (fit !== null) setZoom(mermaidEl, fit, true)
+      else setZoom(mermaidEl, 1, true)
+      return
+    }
+    if (target.closest('.mermaid-btn-fullscreen')) {
+      e.preventDefault()
+      e.stopPropagation()
+      const svgEl = mermaidEl.querySelector('svg')
+      if (svgEl) {
+        fsSvg.value = svgEl.outerHTML
+        fsSource.value = getMermaidSource(mermaidEl)
+        fsOpen.value = true
+      }
+      return
+    }
+  }
   const a = target.closest('a[href]') as HTMLAnchorElement | null
   if (!a) return
   const href = a.getAttribute('href') ?? ''
@@ -105,8 +255,65 @@ function onAuxClick(e: MouseEvent) {
 }
 
 function onMouseDown(e: MouseEvent) {
-  if (e.button !== 1) return
+  if (e.button !== 1) {
+    // mermaid pan: left-drag on pre.mermaid surface (not on toolbar buttons)
+    if (e.button === 0) {
+      const mermaidEl = (e.target as HTMLElement).closest('pre.mermaid[data-rendered]') as HTMLElement | null
+      if (mermaidEl && !mermaidEl.hasAttribute('data-error')) {
+        if ((e.target as HTMLElement).closest('.mermaid-toolbar')) return
+        // only pan when zoomed or scrollable
+        const startX = e.clientX
+        const startY = e.clientY
+        const startLeft = mermaidEl.scrollLeft
+        const startTop = mermaidEl.scrollTop
+        let dragging = false
+        let moved = false
+        function onMove(ev: MouseEvent) {
+          const dx = ev.clientX - startX
+          const dy = ev.clientY - startY
+          if (!dragging && Math.hypot(dx, dy) < 3) return
+          if (!dragging) {
+            dragging = true
+            mermaidEl!.classList.add('is-panning')
+          }
+          moved = true
+          mermaidEl!.scrollLeft = startLeft - dx
+          mermaidEl!.scrollTop = startTop - dy
+        }
+        function onUp() {
+          mermaidEl!.classList.remove('is-panning')
+          window.removeEventListener('mousemove', onMove)
+          window.removeEventListener('mouseup', onUp)
+          if (moved) {
+            // prevent click from triggering link handling
+            const handler = (ev: MouseEvent) => {
+              ev.preventDefault()
+              ev.stopPropagation()
+              window.removeEventListener('click', handler, true)
+            }
+            window.addEventListener('click', handler, true)
+            setTimeout(() => window.removeEventListener('click', handler, true), 0)
+          }
+        }
+        window.addEventListener('mousemove', onMove)
+        window.addEventListener('mouseup', onUp)
+      }
+    }
+    if ((e.target as HTMLElement).closest('a[data-internal-path]')) e.preventDefault()
+    return
+  }
   if ((e.target as HTMLElement).closest('a[data-internal-path]')) e.preventDefault()
+}
+
+function onWheel(e: WheelEvent) {
+  const mermaidEl = (e.target as HTMLElement).closest('pre.mermaid[data-rendered]') as HTMLElement | null
+  if (!mermaidEl || mermaidEl.hasAttribute('data-error')) return
+  if (!e.ctrlKey && !e.metaKey) return
+  e.preventDefault()
+  e.stopPropagation()
+  e.stopImmediatePropagation?.()
+  const delta = e.deltaY > 0 ? -0.1 : 0.1
+  setZoom(mermaidEl, getZoom(mermaidEl) + delta, true)
 }
 
 function scrollToLine(line: number) {
@@ -135,12 +342,12 @@ let mermaidSeq = 0
 
 async function runMermaid() {
   const seq = ++mermaidSeq
-  // Ensure v-html patch has flushed before querying pre.mermaid
   await nextTick()
   if (seq !== mermaidSeq) return
   if (props.doc.hasMermaid && rootEl.value) {
     await renderMermaid(rootEl.value, prefs.theme)
     if (seq !== mermaidSeq) return
+    enhanceMermaids()
   }
   emit('mermaidDone')
 }
@@ -149,6 +356,7 @@ onMounted(() => {
   rootEl.value?.addEventListener('click', onClick)
   rootEl.value?.addEventListener('auxclick', onAuxClick)
   rootEl.value?.addEventListener('mousedown', onMouseDown)
+  rootEl.value?.addEventListener('wheel', onWheel, { passive: false })
   runMermaid()
 })
 onBeforeUnmount(() => {
@@ -156,6 +364,7 @@ onBeforeUnmount(() => {
   rootEl.value?.removeEventListener('click', onClick)
   rootEl.value?.removeEventListener('auxclick', onAuxClick)
   rootEl.value?.removeEventListener('mousedown', onMouseDown)
+  rootEl.value?.removeEventListener('wheel', onWheel as EventListener)
 })
 
 watch(
@@ -186,6 +395,7 @@ defineExpose({ scrollToLine, scrollToAnchor, runMermaid })
       </p>
       <div v-html="doc.html" />
     </article>
+    <MermaidFullscreen :open="fsOpen" :svg="fsSvg" :source="fsSource" @close="fsOpen = false" />
   </div>
 </template>
 
