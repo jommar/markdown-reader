@@ -7,11 +7,13 @@ import Breadcrumbs from './components/Breadcrumbs.vue'
 import Toolbar from './components/Toolbar.vue'
 import Toc from './components/Toc.vue'
 import OpenRootDialog from './components/OpenRootDialog.vue'
+import PasteDialog from './components/PasteDialog.vue'
 import HistoryDialog from './components/HistoryDialog.vue'
 import { useWorkspace } from './stores/workspace'
 import { useTabs } from './stores/tabs'
 import { usePrefs } from './stores/prefs'
 import { useHistory } from './stores/history'
+import { usePaste } from './stores/paste.ts'
 import { useScroller } from './composables/useScroller'
 import { useShortcuts } from './composables/useShortcuts'
 import { useUrlSync } from './composables/useUrlSync'
@@ -24,6 +26,7 @@ const workspace = useWorkspace()
 const tabs = useTabs()
 const prefs = usePrefs()
 const history = useHistory()
+const paste = usePaste()
 const { setScroller } = useScroller()
 const scrollEl = ref<HTMLElement | null>(null)
 const helpOpen = ref(false)
@@ -158,6 +161,9 @@ onMounted(async () => {
     toggleHelp: () => {
       helpOpen.value = !helpOpen.value
     },
+    openPaste: () => {
+      paste.dialogOpen = true
+    },
   })
 
   workspace.searchMode = prefs.searchMode
@@ -244,6 +250,7 @@ watch(
       </div>
     </div>
     <OpenRootDialog :open="workspace.dialogOpen" @close="workspace.dialogOpen = false" />
+    <PasteDialog :open="paste.dialogOpen" @close="paste.dialogOpen = false" />
     <HistoryDialog />
     <ShortcutOverlay :open="helpOpen" @close="helpOpen = false" />
     <UiToast

@@ -14,6 +14,7 @@ export interface ShortcutHandlers {
   clearFilter(): void
   openFolder(): void
   openHistory(): void
+  openPaste(): void
   toggleHelp?(): void
 }
 
@@ -31,6 +32,12 @@ export function useShortcuts(handlers: ShortcutHandlers): void {
   const onKeydown = (e: KeyboardEvent) => {
     const mod = e.ctrlKey || e.metaKey
     const inForm = isFormField(e.target)
+
+    if (mod && e.shiftKey && e.key.toLowerCase() === 'v') {
+      e.preventDefault()
+      handlers.openPaste()
+      return
+    }
 
     if (mod && e.key.toLowerCase() === 'p' && !e.shiftKey) {
       e.preventDefault()

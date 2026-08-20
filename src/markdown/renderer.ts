@@ -6,6 +6,7 @@ import rehypeStringify from 'rehype-stringify'
 import rehypeSlug from 'rehype-slug'
 import rehypePrettyCode from 'rehype-pretty-code'
 import { sanitizeHtml } from './sanitize.ts'
+import { parseFrontmatterClient } from './frontmatter.client.ts'
 import type { FileResult } from '../../server/types.ts'
 import {
   calloutPlugin,
@@ -75,6 +76,32 @@ export async function renderDocument(
     html: sanitizeHtml(result.toString()),
     headings,
     frontmatter: file.frontmatter,
+    hasMermaid,
+    highlightingSkipped: !highlighting,
+  }
+}
+
+export async function renderRawMarkdown(
+  raw: string,
+  opts?: { showAllTables?: boolean },
+): Promise<RenderedDoc> {
+  const { content, frontmatter, frontmatterLines } = parseFrontmatterClient(raw)
+  const headings: Heading[] = []
+  const highlighting = content.length <= 200_000
+  const renderCtx: RenderContext = {
+    root: '',
+    fileSet: new Set<string>(),
+    currentPath: '',
+    frontmatterLines,
+    showAllTables: opts?.showAllTables === true,
+  }
+  const processor = buildProcessor(renderCtx, headings, { highlighting })
+  const result = await processor.process(content)
+  const hasMermaid = /```mermaid/.test(content)
+  return {
+    html: sanitizeHtml(result.toString()),
+    headings,
+    frontmatter,
     hasMermaid,
     highlightingSkipped: !highlighting,
   }

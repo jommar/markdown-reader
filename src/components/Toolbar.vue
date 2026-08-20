@@ -4,6 +4,7 @@ import { useTabs } from '../stores/tabs'
 import { useWorkspace } from '../stores/workspace'
 import { usePrefs } from '../stores/prefs'
 import { useHistory } from '../stores/history'
+import { usePaste } from '../stores/paste.ts'
 import UiButton from './ui/UiButton.vue'
 import UiIcon from './ui/UiIcon.vue'
 
@@ -11,6 +12,7 @@ const tabs = useTabs()
 const workspace = useWorkspace()
 const prefs = usePrefs()
 const history = useHistory()
+const paste = usePaste()
 
 const path = computed(() => tabs.currentEntry?.path ?? '')
 const root = computed(() => tabs.currentEntry?.root ?? workspace.root)
@@ -96,6 +98,13 @@ function toggleTheme() {
         @click="togglePin"
       >
         <UiIcon :name="pinned ? 'pin' : 'unpin'" />
+      </UiButton>
+      <UiButton
+        :active="!!paste.doc"
+        title="Paste markdown (Ctrl+Shift+V)"
+        @click="paste.dialogOpen = true"
+      >
+        Paste
       </UiButton>
     </div>
     <div class="flex-1 truncate [text-align:left] font-mono text-xs [direction:rtl]" :title="path">

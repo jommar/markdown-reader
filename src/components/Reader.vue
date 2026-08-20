@@ -5,6 +5,7 @@ import { useTabs } from '../stores/tabs'
 import { useWorkspace } from '../stores/workspace'
 import { usePrefs } from '../stores/prefs'
 import { useHistory } from '../stores/history'
+import { usePaste } from '../stores/paste.ts'
 import { useScroller } from '../composables/useScroller'
 import MarkdownView from './MarkdownView.vue'
 import UiSkeleton from './ui/UiSkeleton.vue'
@@ -14,6 +15,7 @@ const tabs = useTabs()
 const workspace = useWorkspace()
 const prefs = usePrefs()
 const history = useHistory()
+const paste = usePaste()
 const { scroller } = useScroller()
 
 const doc = ref<RenderedDoc | null>(null)
@@ -74,6 +76,29 @@ function onShowAll() {
   load()
 }
 
+function onPasteShowAll() {
+  paste.setShowAllTables(true)
+}
+
+function clearPaste() {
+  paste.clear()
+}
+
+function editPaste() {
+  paste.dialogOpen = true
+}
+
+async function copyPasteSource() {
+  const text = paste.raw
+  if (!text) return
+  try {
+    await navigator.clipboard.writeText(text)
+    workspace.showCopyToast('Markdown copied')
+  } catch {
+    workspace.showCopyToast('Copy failed')
+  }
+}
+
 function applyPending() {
   const intent = tabs.consumePending()
   if (intent.line !== undefined) {
@@ -106,8 +131,28 @@ watch(
 </script>
 
 <template>
+  <div v-if="paste.doc" class="paste-preview">
+    <div
+      class="paste-banner border-border bg-bg-elev sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b px-4 py-2 text-[0.82rem]"
+    >
+      <span class="text-accent font-semibold">Pasted preview</span>
+      <span class="text-fg-faint hidden text-[0.72rem] sm:inline"
+        >Ephemeral — not saved to disk. Internal links are disabled.</span
+      >
+      <span class="flex-1" />
+      <UiButton @click="editPaste">Edit</UiButton>
+      <UiButton @click="copyPasteSource">Copy source</UiButton>
+      <UiButton @click="clearPaste">Clear</UiButton>
+    </div>
+    <MarkdownView
+      :doc="paste.doc!"
+      root=""
+      @show-all="onPasteShowAll"
+      @mermaidDone="onMermaidDone"
+    />
+  </div>
   <div
-    v-if="loading"
+    v-else-if="loading"
     class="reader-state reader-state--loading font-prose"
     role="status"
     aria-live="polite"
@@ -123,7 +168,10 @@ watch(
   </div>
   <div v-else-if="!doc" class="reader-state reader-state--empty font-prose" role="status">
     <p class="reader-title">Pick a file to start reading.</p>
-    <p class="reader-detail">Choose a file from the sidebar, or search for content.</p>
+    <p class="reader-detail">
+      Choose a file from the sidebar, search for content, or paste raw markdown.
+    </p>
+    <UiButton variant="primary" @click="paste.dialogOpen = true">Paste markdown</UiButton>
   </div>
   <MarkdownView
     v-else

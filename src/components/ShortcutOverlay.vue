@@ -113,6 +113,9 @@ function onKeydown(e: KeyboardEvent) {
           <li class="flex justify-between" aria-keyshortcuts="Control+K">
             <span>Toggle theme</span><kbd class="font-mono">Ctrl+K</kbd>
           </li>
+          <li class="flex justify-between" aria-keyshortcuts="Control+Shift+V">
+            <span>Paste markdown</span><kbd class="font-mono">Ctrl+Shift+V</kbd>
+          </li>
           <li class="flex justify-between" aria-keyshortcuts="/">
             <span>Focus filter</span><kbd class="font-mono">/</kbd>
           </li>
