@@ -19,6 +19,7 @@ The core problem it solves: large documentation trees — hundreds of Markdown f
 - **Rendering** — `unified` → `remark-parse` → `remark-gfm` → `remark-rehype` → `rehype-slug` → `rehype-pretty-code` (shiki `github-light`/`github-dark`, 14 langs) → custom rehype plugins for callouts, code-block copy buttons, data-line stamping, table wrapping, internal links, headings extraction, mermaid placeholders → `rehype-stringify` → `DOMPurify` before `v-html`.
 - **Mermaid** — lazy-loaded (`~154 KB gz`), per-block `mermaid.render()` with `data-src` preservation and theme re-render.
 - **Frontmatter** — parsed server-side with `gray-matter`; offset math preserves search-to-scroll line numbers.
+- **Paste preview** — ephemeral, client-only raw-markdown preview (no file, no server write). `Paste` button in sidebar/toolbar or `Ctrl+Shift+V` opens a dialog; content is rendered through the same `unified` pipeline (GFM, shiki, mermaid, callouts, `DOMPurify`) with a browser-safe frontmatter parser, banner `Edit / Copy source / Clear`, `1.5 MB` limit, TOC/wide-hint integration.
 - **UX polish** — TOC rail (≥3 headings), breadcrumbs, zoom (`Ctrl +`/`-`/`0` or `Ctrl+wheel`), wide/narrow prose (`Ctrl+Shift+\`), reading callouts, shiki code tables, task-list icons, large-table capping (500 row cap → show first 200 + "show all N"), copy feedback, skeleton loaders, keyboard overlay (`?`).
 - **History & recents** — recent files (pin / delete / pinned-only filter) pruned on tree refresh; known roots persisted to the platform config directory (max 10); tab session restore on reload.
 
@@ -84,12 +85,12 @@ markdown-reader/
 │   └── types.ts               # shared API types (import type)
 └── src/
     ├── main.ts / App.vue / boot.ts
-    ├── stores/  {workspace,tabs,prefs,history}.ts  (Pinia)
-    ├── markdown/ {renderer,links,mermaid,sanitize,plugins}.ts
+    ├── stores/  {workspace,tabs,prefs,history,paste}.ts  (Pinia)
+    ├── markdown/ {renderer,links,mermaid,sanitize,plugins,frontmatter.client}.ts
     ├── composables/ {useScroller,useShortcuts,useUrlSync}.ts
     ├── styles/  {tokens,prose,layout}.css
     └── components/  Sidebar, TreeNode, SearchPanel, Reader, MarkdownView,
-                    Toc, TabBar, Breadcrumbs, Toolbar, OpenRootDialog, …
+                    Toc, TabBar, Breadcrumbs, Toolbar, OpenRootDialog, PasteDialog, …
 ```
 
 ---
@@ -123,13 +124,16 @@ All responses send `Cache-Control: no-cache`. Types in `server/types.ts`.
 ```
 FileResult → renderDocument(file, { root, fileSet }) → RenderedDoc
   { html, headings, frontmatter, hasMermaid, highlightingSkipped }
+raw string → renderRawMarkdown(raw)              → RenderedDoc  (paste preview, client-only)
 ```
 
-- Frontmatter is server-only (`gray-matter` needs `Buffer`); `frontmatterLines` offsets `data-line` stamping (`md.core.ruler` on `state.env.frontmatterLines`).
+- Frontmatter is server-only (`gray-matter` needs `Buffer`); `frontmatterLines` offsets `data-line` stamping (`md.core.ruler` on `state.env.frontmatterLines`). Paste preview uses a browser-safe parser in `src/markdown/frontmatter.client.ts` with the same offset logic.
 - `rehype-pretty-code` with `github-light` / `github-dark`; per-render highlight toggle via `md.options.highlight = null` when `content.length > 200_000`.
 - Mermaid fences become `<pre class="mermaid" data-src="…">`; `MarkdownView` lazy-imports `mermaid.ts` only when `hasMermaid`, calls `mermaid.initialize(CONFIG)` once and `run({ nodes: [el] })` per block.
-- Large tables (>500 rows) render first 200 with a "Show all N rows" expander.
+- Large tables (>500 rows) render first 200 with a "Show all N rows" expander (paste preview shares the same cap, with its own `showAllTables` state in `src/stores/paste.ts`).
 - Final HTML is `DOMPurify.sanitize(html, { ADD_TAGS:['details','summary'], ADD_ATTR:['data-line','data-internal-path',…] })` before `v-html`.
+
+**Paste preview** (`src/stores/paste.ts` + `src/components/PasteDialog.vue` + `src/components/Reader.vue`): ephemeral, client-only, max `1.5 MB`, no `/api` call, no disk write. `Reader` shows the paste when `paste.doc` is set (banner `Pasted preview — Edit / Copy source / Clear`); `Sidebar`/`Toolbar` expose `Paste` buttons and a `Pasted preview active` chip; `Ctrl+Shift+V` opens the dialog.
 
 ---
 
@@ -148,6 +152,7 @@ Press `?` to open the in-app overlay.
 | `Ctrl/Cmd + Shift + H` | Open history                  |
 | `Ctrl/Cmd + K`         | Toggle dark / light theme     |
 | `Ctrl/Cmd + Shift + \` | Toggle wide prose             |
+| `Ctrl/Cmd + Shift + V` | Paste markdown preview        |
 | `Ctrl/Cmd + = / +`     | Zoom in                       |
 | `Ctrl/Cmd + - / _`     | Zoom out                      |
 | `Ctrl/Cmd + 0`         | Reset zoom                    |
