@@ -1,0 +1,6 @@
+dist
+node_modules
+coverage
+.orchestrator
+.playwright-mcp
+package-lock.json

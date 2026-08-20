@@ -1,0 +1,432 @@
+.prose {
+  font-size: calc(var(--text-base) * var(--reader-font-scale));
+  line-height: 1.7;
+  max-width: var(--reader-measure);
+  margin: 0 auto;
+  padding: 2rem 1.5rem 40vh;
+  color: var(--fg);
+  font-family: var(--font-prose);
+  tab-size: 2;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-weight: 650;
+  scroll-margin-top: 1rem;
+  margin-top: 1.8em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+.prose h1,
+.prose h2 {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.25em;
+}
+.prose h1,
+.prose h2,
+.prose h3 {
+  text-wrap: balance;
+}
+
+.prose h1 {
+  font-size: var(--text-3xl);
+  color: color-mix(in srgb, var(--fg) 88%, var(--accent));
+}
+.prose h2 {
+  font-size: var(--text-2xl);
+}
+.prose h3 {
+  font-size: var(--text-xl);
+}
+.prose h4 {
+  font-size: var(--text-lg);
+}
+
+.prose p {
+  margin: 0 0 1em;
+}
+
+.prose strong {
+  color: var(--fg);
+  font-weight: 700;
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose kbd {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--bg-inset);
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  padding: 0.1em 0.4em;
+}
+
+.prose mark {
+  background: var(--hit);
+  color: inherit;
+  padding: 0 0.1em;
+  border-radius: var(--radius-sm);
+}
+
+.prose code {
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  background: var(--bg-inset);
+  color: color-mix(in srgb, var(--fg) 45%, var(--accent));
+  padding: 0.15em 0.35em;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.9em;
+}
+
+.prose ul,
+.prose ol {
+  margin: 0 0 1em;
+  padding-left: 1.5em;
+}
+
+.prose ul {
+  list-style: disc;
+}
+
+.prose ol {
+  list-style: decimal;
+}
+
+.prose li {
+  margin: 0.25em 0;
+}
+
+.prose li::marker {
+  color: var(--accent);
+}
+
+.prose ul ul {
+  list-style: circle;
+}
+
+.prose ul ul ul {
+  list-style: square;
+}
+
+.prose li.task-list-item {
+  list-style: none;
+  margin-left: -1.5em;
+  padding-left: 1.75em;
+  position: relative;
+}
+
+.prose li.task-list-item input[type='checkbox'] {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.prose li.task-list-item::before {
+  content: '◯';
+  position: absolute;
+  left: 0;
+  top: 0.22em;
+  width: 1.1em;
+  height: 1.1em;
+  line-height: 1.1em;
+  text-align: center;
+  font-size: 1.05em;
+  color: var(--danger);
+}
+
+.prose li.task-list-item:has(input[type='checkbox']:checked) {
+  color: var(--fg-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--border-strong);
+}
+
+.prose li.task-list-item:has(input[type='checkbox']:checked)::before {
+  content: '✔';
+  font-variant-emoji: text;
+  color: var(--success);
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2em 0;
+}
+
+.prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  text-underline-offset: 2px;
+}
+
+.prose a:hover {
+  text-decoration-color: var(--accent);
+}
+
+.prose a.external::after {
+  content: ' ↗';
+  font-size: 0.85em;
+  text-decoration: none;
+}
+
+.prose blockquote {
+  margin: 0 0 1em;
+  padding: 0.1em 1em;
+  border-left: 3px solid var(--border-strong);
+  background: var(--bg-elev);
+  color: var(--fg-muted);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.prose blockquote > blockquote {
+  background: transparent;
+}
+
+.prose .callout {
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+  color: var(--fg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.prose .callout-title {
+  font-weight: 650;
+  margin-bottom: 0.25em;
+  text-transform: capitalize;
+}
+
+.prose .callout-note {
+  border-left-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+}
+.prose .callout-tip {
+  border-left-color: var(--success);
+  background: color-mix(in srgb, var(--success) 8%, var(--bg));
+}
+.prose .callout-warning {
+  border-left-color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 8%, var(--bg));
+}
+.prose .callout-important {
+  border-left-color: var(--info);
+  background: color-mix(in srgb, var(--info) 8%, var(--bg));
+}
+.prose .callout-caution {
+  border-left-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, var(--bg));
+}
+
+.prose details {
+  margin: 0 0 1em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev);
+  padding: 0.5em 1em;
+}
+
+.prose summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--fg);
+  margin: -0.5em -1em;
+  padding: 0.5em 1em;
+  user-select: none;
+}
+
+.prose summary:hover {
+  color: var(--accent);
+}
+
+.prose details[open] summary {
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.5em;
+}
+
+.prose dl:not(.frontmatter) {
+  margin: 0 0 1em;
+}
+
+.prose dl:not(.frontmatter) dt {
+  font-weight: 650;
+  margin-top: 0.6em;
+}
+
+.prose dl:not(.frontmatter) dd {
+  margin: 0 0 0.3em 1.5em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prose *,
+  .prose *::before,
+  .prose *::after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.prose .table-wrap {
+  overflow-x: auto;
+  margin: 0 0 1em;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  scrollbar-gutter: stable;
+}
+
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid var(--border);
+  padding: 0.4em 0.6em;
+  overflow-wrap: anywhere;
+}
+
+.prose thead th {
+  background: var(--bg-elev);
+}
+
+.prose tbody tr:nth-child(even) {
+  background: var(--bg-elev);
+}
+
+.prose tbody tr:hover {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.prose .code-block {
+  position: relative;
+  overflow-x: auto;
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin: 0 0 1em;
+  font-size: calc(0.9em * var(--reader-font-scale));
+  padding: 1.25em 1em 0.75em;
+  scrollbar-gutter: stable;
+}
+
+.prose .code-block::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 0.4rem;
+  left: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-faint);
+  pointer-events: none;
+}
+
+.prose .code-block.plain {
+  background: var(--bg-inset);
+  font-family: var(--font-mono);
+}
+
+.prose .code-block pre {
+  margin: 0;
+}
+
+.prose .copy-btn {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  opacity: 0;
+  transition:
+    opacity var(--duration-100) var(--ease-standard),
+    background var(--duration-100) var(--ease-standard);
+  background: var(--bg-elev);
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.2em 0.6em;
+  font-size: 0.75rem;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.prose .code-block:hover .copy-btn,
+.prose .code-block:focus-within .copy-btn,
+.prose .copy-btn:focus-visible {
+  opacity: 1;
+}
+
+.prose .copy-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.prose .broken-link,
+.prose .unsupported-link {
+  color: var(--fg-faint);
+  text-decoration: underline dotted;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.prose pre.mermaid:not([data-rendered]) {
+  visibility: hidden;
+  min-height: 2rem;
+}
+.prose pre.mermaid {
+  overflow-x: auto;
+  text-align: center;
+}
+.prose pre.mermaid svg {
+  transform: scale(var(--reader-font-scale));
+  transform-origin: top center;
+}
+
+.prose .table-show-all {
+  display: block;
+  margin: 0.5rem auto;
+  background: var(--bg-elev);
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.3em 1em;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.prose .table-show-all:hover {
+  border-color: var(--accent);
+}
+
+.prose dl.frontmatter {
+  margin: 0 0 1.5em;
+  padding: 0.75em 1em;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.9rem;
+}
+
+.prose dl.frontmatter dt {
+  font-weight: 650;
+  color: var(--fg-muted);
+  margin-top: 0.4em;
+}
+
+.prose dl.frontmatter dd {
+  margin: 0 0 0.4em 0;
+}

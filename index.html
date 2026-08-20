@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="mdr-token" content="__MDR_TOKEN__" />
+    <script>
+      try {
+        var raw = localStorage.getItem('markdown-reader:prefs:v2')
+        if (raw) {
+          var p = JSON.parse(raw)
+          if (p.theme === 'light' || p.theme === 'dark')
+            document.documentElement.setAttribute('data-theme', p.theme)
+        }
+      } catch (e) {}
+    </script>
+    <title>Markdown Reader</title>
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

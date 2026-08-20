@@ -1,0 +1,147 @@
+:root {
+  --bg: #0f1115;
+  --bg-elev: #161920;
+  --bg-inset: #1c2029;
+  --border: #262b36;
+  --border-strong: #38404f;
+  --fg: #dde3ec;
+  --fg-muted: #9aa4b5;
+  --fg-faint: #6b7688;
+  --accent: #6ea8fe;
+  --hit: #f5c14233;
+  --danger: #f2777a;
+  --success: #2fbf71;
+  --warning: #e0a33c;
+  --info: #7c5cd6;
+  --reader-font-scale: 1;
+  --reader-measure: 72ch;
+  --font-prose: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+  --sidebar-width: 320px;
+  --tree-indent: 14px;
+  --tree-row-pad: 4px; /* px-1 left gutter — keeps hover flush with edge */
+  --tree-chevron-offset: 20px; /* 16px UiIcon chevron + 4px gap-1 */
+  --tree-leaf-offset: 24px; /* tree-row-pad + tree-chevron-offset — leaf label aligns with dir label */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-4: 1rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #000 8%, transparent);
+  --shadow-md:
+    0 4px 12px color-mix(in srgb, #000 14%, transparent),
+    0 1px 3px color-mix(in srgb, #000 10%, transparent);
+  --shadow-lg:
+    0 8px 24px color-mix(in srgb, #000 16%, transparent),
+    0 4px 12px color-mix(in srgb, #000 12%, transparent);
+  --duration-100: 100ms;
+  --duration-200: 200ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --z-dropdown: 40;
+  --z-dialog: 50;
+  --z-toast: 60;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+}
+
+:root[data-theme='light'] {
+  --bg: #ffffff;
+  --bg-elev: #f4f5f7;
+  --bg-inset: #eceef1;
+  --border: #d5d9e0;
+  --border-strong: #b9c0cc;
+  --fg: #1b1f27;
+  --fg-muted: #4c5566;
+  --fg-faint: #7a8495;
+  --accent: #2563eb;
+  --tree-indent: 14px;
+  --tree-row-pad: 4px;
+  --tree-chevron-offset: 20px;
+  --tree-leaf-offset: 24px;
+  --hit: #f5c14255;
+  --danger: #d64545;
+  --success: #148c4f;
+  --warning: #b7791f;
+  --info: #6d28d9;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-4: 1rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #000 10%, transparent);
+  --shadow-md:
+    0 4px 12px color-mix(in srgb, #000 14%, transparent),
+    0 1px 3px color-mix(in srgb, #000 10%, transparent);
+  --shadow-lg:
+    0 8px 24px color-mix(in srgb, #000 16%, transparent),
+    0 4px 12px color-mix(in srgb, #000 12%, transparent);
+  --duration-100: 100ms;
+  --duration-200: 200ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --z-dropdown: 40;
+  --z-dialog: 50;
+  --z-toast: 60;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-elev: var(--bg-elev);
+  --color-bg-inset: var(--bg-inset);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-faint: var(--fg-faint);
+  --color-accent: var(--accent);
+  --color-hit: var(--hit);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --font-prose: var(--font-prose);
+  --font-mono: var(--font-mono);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-full: var(--radius-full);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+}
+
+.shiki,
+.shiki span {
+  color: var(--shiki-light);
+}
+:root:not([data-theme='light']) .shiki,
+:root:not([data-theme='light']) .shiki span {
+  color: var(--shiki-dark);
+}
