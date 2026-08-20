@@ -3,7 +3,7 @@ name: release
 description: Ship a versioned release to npm (@jommar/markdown-reader) and GHCR (ghcr.io/jommar/markdown-reader) via tag-gated release.yml. Dry-run by default, ask bump + ask to ship.
 ---
 
-You ship `markdown-reader` via the zero-host pipeline: `npm version` bump → `git tag v*` → `git push --follow-tags` → `.github/workflows/release.yml` → `GHCR + npm --provenance`. Tag-gated only — `push` to `main` runs `ci.yml` but does NOT publish.
+You ship `markdown-reader` via the zero-host pipeline: `npm version` bump → `git tag v*` → `git push --follow-tags` → `.github/workflows/release.yml` → `GHCR + npm --provenance + GitHub Release`. Tag-gated only — `push` to `main` runs `ci.yml` but does NOT publish.
 
 ## Pre-flight (always, read-only)
 
@@ -12,7 +12,8 @@ You ship `markdown-reader` via the zero-host pipeline: `npm version` bump → `g
 3. Run gates before bumping — matches `AGENTS.md: Commands`:
    `npm run typecheck && npm test && npm run test:component && npm run build`
    Fail = stop, fix, don't bump.
-4. `rg --version` + `gh auth status` — release needs `rg` and `NPM_TOKEN` (granular bypass 2FA, `gh secret list --repo jommar/markdown-reader`) or OIDC. `release.yml:56-60` uses `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}`.
+4. `rg --version` + `gh auth status` — release needs `rg` and npm auth. Preferred is **Trusted Publishing (OIDC)** (`id-token: write` + `registry-url: https://registry.npmjs.org`, no `NPM_TOKEN`). Fallback: `NPM_TOKEN` (granular, bypasses 2FA, `gh secret list --repo jommar/markdown-reader`). `release.yml: Publish to npm` uses `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` but works with OIDC when the package's Trusted Publisher is linked on npmjs.com (`@jommar/markdown-reader → Settings → Trusted Publishers → jommar/markdown-reader`). Verify on npmjs; if not linked, keep `NPM_TOKEN` until it is.
+5. `release.yml` has a **version guard** (`Guard version matches tag`): `package.json:version` must equal `v*` tag (`jq -r .version`). If it fails the run errors with `package.json version X != tag Y`. Don't bypass it — fix the bump.
 
 ## Step 1 — Ask bump (required, no default)
 
@@ -36,9 +37,9 @@ npm run build  # ensure dist/ still builds
 
 Print what WOULD happen:
 - next version `X.Y.Z` + tag `vX.Y.Z`
-- `git push origin main --follow-tags` triggers `release.yml:4 tags: ["v*"]` → `2m21s` build-and-publish (last `32413777273`), `gh run watch` shape, log grep for `+ @jommar/markdown-reader@X.Y.Z` and `Your package is being processed and may take a few minutes to become available.` + `Provenance statement published to transparency log: https://search.sigstore.dev/?logIndex=…`
+- `git push origin main --follow-tags` triggers `release.yml: push.tags ["v*"]` (plus `workflow_dispatch` with `version` input for manual runs) → ~2-3m `build-and-publish`, `concurrency: group: release-${{ github.ref }}` prevents overlapping releases, version guard runs first, `gh run watch` shape, log grep for `+ @jommar/markdown-reader@X.Y.Z` and `Your package is being processed and may take a few minutes to become available.` + `Provenance statement published to transparency log: https://search.sigstore.dev/?logIndex=…` + `Create GitHub Release` (`softprops/action-gh-release@v2`, `generate_release_notes: true`)
 - GHCR verify: `docker pull ghcr.io/jommar/markdown-reader:X.Y.Z && docker run --rm … --version`
-- npm verify: `npm view @jommar/markdown-reader version` lag 1-6m (1.0.1: 16:06→16:12, 1.0.2: 20:25→~20:31), `curl https://registry.npmjs.org/@jommar%2Fmarkdown-reader` `dist-tags.latest`
+- npm verify: `npm view @jommar/markdown-reader version` **lags 1-6m** — GHCR is instant, npm replication is not. `curl https://registry.npmjs.org/@jommar%2Fmarkdown-reader` `dist-tags.latest` may still show old version (1.0.1: 16:06→16:12, 1.0.2: 20:25→~20:31, 1.1.0: 21:26→21:30+). Poll, don't declare failure early. `v1.1.0 32418921712` needed a `gh run rerun --failed` for a flaky `history-dialog.spec.ts:199`.
 - npx note: share as `@latest` — `npx @jommar/markdown-reader@latest --root …` (bare `npx @jommar/markdown-reader` hits npm 11 scoped-bin bug, `README.md:48`)
 
 ## Step 3 — Ask to ship (required)
@@ -55,16 +56,18 @@ Do NOT proceed without explicit `Ship now`. If `Not yet`: `git checkout -- packa
 npm version <pick> -m "chore: bump to %s for <reason>"
 git push origin main --follow-tags
 gh run list --limit 5  # find release vX.Y.Z + ci main
-# poll until completed — release 32413777273: in_progress → success 2m21s, ci 32413776689 similar
+# poll until completed — release: in_progress → success ~2-3m, ci similar
 gh run view <release-id> --json status,conclusion
-gh run view <release-id> --log | grep -E "publish|provenance|error"
-# verify GHCR
+gh run view <release-id> --log | grep -E "publish|provenance|error|Guard version"
+# GHCR is live immediately after Docker meta tags
 docker pull ghcr.io/jommar/markdown-reader:X.Y.Z
 docker pull ghcr.io/jommar/markdown-reader:latest
-# verify npm (poll, expect lag)
-npm view @jommar/markdown-reader version
+# npm: poll with backoff until dist-tags catches up (GHCR live ≠ npm live)
+for i in 1 2 3 4 5 6; do npm view @jommar/markdown-reader version; sleep 30; done
 npm view @jommar/markdown-reader dist-tags
-curl -s https://registry.npmjs.org/@jommar%2Fmarkdown-reader | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['dist-tags'])"
+curl -s https://registry.npmjs.org/@jommar%2Fmarkdown-reader | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['dist-tags'], sorted(d['versions'].keys())[-3:])"
+# GitHub Release
+gh release view vX.Y.Z --json tagName,publishedAt,url
 ```
 
 Report share lines:
@@ -73,11 +76,13 @@ Report share lines:
 npx @jommar/markdown-reader@latest --root /path/to/docs
 npm i -g @jommar/markdown-reader && mdr --root /path/to/docs
 docker run --rm -p 127.0.0.1:5180:5180 -v /path/to/docs:/docs ghcr.io/jommar/markdown-reader --root /docs
+gh release view vX.Y.Z --json url  # or https://github.com/jommar/markdown-reader/releases/tag/vX.Y.Z
 ```
 
 ## Notes
 
-- `release.yml:1-60` is `push.tags v*` + `workflow_dispatch` only; don’t change to `push.branches` without asking.
+- `release.yml` is `push.tags v*` + `workflow_dispatch` (with `version` choice) only; `concurrency.group: release-${{ github.ref }}` + `attestations: write` + `contents: write` for releases. Don't change to `push.branches` without asking.
 - `AGENTS.md` gate is `npm run typecheck && npm test && npm run test:component` — match it.
 - Keep `README.md: Quantitative` note about `@latest` for npm 11.
 - If dry-run fails at typecheck/tests, fix before asking to ship.
+- **OIDC migration:** once Trusted Publisher shows green on npmjs, `NPM_TOKEN` can be deleted (`gh secret remove NPM_TOKEN --repo jommar/markdown-reader`). Until then the workflow tolerates either (empty `NODE_AUTH_TOKEN` → OIDC, set → token). Don't delete the secret before verifying OIDC publish succeeds.
