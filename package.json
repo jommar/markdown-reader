@@ -1,6 +1,6 @@
 {
   "name": "@jommar/markdown-reader",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": false,
   "license": "MIT",
   "type": "module",
@@ -27,8 +27,17 @@
   "engines": {
     "node": ">=22.6"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jommar/markdown-reader.git"
+  },
+  "homepage": "https://github.com/jommar/markdown-reader#readme",
+  "bugs": {
+    "url": "https://github.com/jommar/markdown-reader/issues"
+  },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
     "dev": "tsx watch server/index.ts",
