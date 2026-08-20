@@ -10,6 +10,8 @@ export function sanitizeHtml(html: string): string {
       'data-src',
       'data-lang',
       'data-rendered',
+      'data-error',
+      'data-processed',
       'target',
     ],
     ALLOW_DATA_ATTR: true,

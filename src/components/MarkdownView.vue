@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { RenderedDoc } from '../markdown/renderer'
 import { renderMermaid } from '../markdown/mermaid'
 import { useTabs } from '../stores/tabs'
@@ -131,9 +131,16 @@ function scrollToAnchor(slug: string) {
   if (el) el.scrollIntoView()
 }
 
+let mermaidSeq = 0
+
 async function runMermaid() {
+  const seq = ++mermaidSeq
+  // Ensure v-html patch has flushed before querying pre.mermaid
+  await nextTick()
+  if (seq !== mermaidSeq) return
   if (props.doc.hasMermaid && rootEl.value) {
     await renderMermaid(rootEl.value, prefs.theme)
+    if (seq !== mermaidSeq) return
   }
   emit('mermaidDone')
 }
@@ -145,6 +152,7 @@ onMounted(() => {
   runMermaid()
 })
 onBeforeUnmount(() => {
+  mermaidSeq++
   rootEl.value?.removeEventListener('click', onClick)
   rootEl.value?.removeEventListener('auxclick', onAuxClick)
   rootEl.value?.removeEventListener('mousedown', onMouseDown)
