@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { RenderedDoc } from '../markdown/renderer'
-import { renderMermaid } from '../markdown/mermaid'
+import { renderMermaid, getMermaidSourceByEl } from '../markdown/mermaid'
 import { useTabs } from '../stores/tabs'
 import { useWorkspace } from '../stores/workspace'
 import { usePrefs } from '../stores/prefs'
@@ -68,13 +68,33 @@ function computeInlineFit(el: HTMLElement): number | null {
 }
 
 function getMermaidSource(el: HTMLElement): string {
-  // Exact markdown fence content stored in data-src (set by mermaidPlugin)
-  const src = el.getAttribute('data-src')
-  if (src !== null && src !== '') return src
-  // Fallback for error blocks where data-src may be empty; copy the displayed source
+  // Primary: data-src set by mermaidPlugin (exact fence content)
+  const attr = el.getAttribute('data-src')
+  if (attr !== null && attr.trim() !== '') return attr
+  // Also try dataset (data-src -> dataset.src, data-mermaid-source -> dataset.mermaidSource)
+  const ds = (el as HTMLElement & { dataset: DOMStringMap }).dataset
+  if (ds?.src && ds.src.trim() !== '') return ds.src
+  if ((ds as unknown as Record<string, string>)?.mermaidSource?.trim()) {
+    return (ds as unknown as Record<string, string>).mermaidSource
+  }
+  // Secondary: WeakMap cache in mermaid.ts (survives even if attribute stripped)
+  const cached = getMermaidSourceByEl(el)
+  if (cached !== undefined && cached.trim() !== '') return cached
+  // Tertiary: property mirrored in mermaid.ts
+  const prop = (el as unknown as Record<string, unknown>).__mermaidSrc
+  if (typeof prop === 'string' && prop.trim() !== '') return prop
+  // Fallback for error blocks where source is rendered as code
   const code = el.querySelector<HTMLElement>('.mermaid-error-source code')?.textContent
-  if (code) return code
-  return src ?? ''
+  if (code && code.trim() !== '') return code
+  // Debug: log what we see when nothing found
+  console.warn('[mermaid copy] no source found', {
+    dataSrc: attr,
+    cached,
+    prop,
+    outer: el.outerHTML.slice(0, 400),
+    attrs: Array.from(el.attributes).map((a) => `${a.name}=${a.value.slice(0, 40)}`),
+  })
+  return ''
 }
 
 async function copyCode(btn: HTMLElement) {
@@ -87,29 +107,64 @@ async function copyCode(btn: HTMLElement) {
   }
 }
 
+function legacyCopy(text: string): boolean {
+  try {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.setAttribute('readonly', '')
+    ta.style.position = 'fixed'
+    ta.style.top = '0'
+    ta.style.left = '-9999px'
+    ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.focus()
+    ta.select()
+    ta.setSelectionRange(0, ta.value.length)
+    const ok = document.execCommand('copy')
+    document.body.removeChild(ta)
+    return ok
+  } catch {
+    return false
+  }
+}
+
 async function copyMermaidSource(el: HTMLElement) {
   const src = getMermaidSource(el)
-  if (!src) {
+  if (!src || !src.trim()) {
     workspace.showCopyToast('Nothing to copy')
     return
   }
+  // Must run within the same user-activation tick; try async clipboard first,
+  // then synchronous execCommand fallback. Verify by reading back when possible.
+  let copied = false
   try {
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(src)
+      // Verify when clipboard read is available (requires permission in some browsers)
+      try {
+        if (navigator.clipboard.readText) {
+          const back = await navigator.clipboard.readText()
+          copied = back === src
+          if (!copied) {
+            copied = legacyCopy(src)
+          }
+        } else {
+          copied = true
+        }
+      } catch {
+        copied = true
+      }
     } else {
-      const ta = document.createElement('textarea')
-      ta.value = src
-      ta.setAttribute('readonly', '')
-      ta.style.position = 'fixed'
-      ta.style.opacity = '0'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
+      copied = legacyCopy(src)
     }
-    workspace.showCopyToast('Mermaid source copied')
   } catch {
-    workspace.showCopyToast('Copy failed')
+    copied = legacyCopy(src)
+  }
+  if (copied) {
+    workspace.showCopyToast('Mermaid source copied')
+  } else {
+    // Final attempt already tried, report failure instead of false success
+    workspace.showCopyToast('Copy failed — please select and copy manually')
   }
 }
 
@@ -117,6 +172,15 @@ function enhanceMermaids() {
   if (!rootEl.value) return
   const pres = Array.from(rootEl.value.querySelectorAll<HTMLElement>('pre.mermaid[data-rendered]'))
   for (const el of pres) {
+    // Ensure source is mirrored to dataset for robust copy even if attribute stripped
+    const cached = getMermaidSourceByEl(el)
+    if (cached && !el.getAttribute('data-src')) {
+      try {
+        el.setAttribute('data-src', cached)
+      } catch {
+        // ignore
+      }
+    }
     if (el.querySelector('.mermaid-toolbar')) continue
     // error blocks get a minimal copy in header, not full toolbar
     if (el.hasAttribute('data-error')) {

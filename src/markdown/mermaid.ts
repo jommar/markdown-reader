@@ -86,12 +86,30 @@ async function getMermaid(): Promise<MermaidModule> {
   return mermaidPromise
 }
 
+export function getMermaidSourceByEl(el: HTMLElement): string | undefined {
+  return sourceCache.get(el)
+}
+
 function getSource(el: HTMLElement): string {
   let src = sourceCache.get(el)
   if (src === undefined) {
     const raw = el.hasAttribute('data-src') ? el.getAttribute('data-src') : null
     src = raw ?? el.textContent ?? ''
     sourceCache.set(el, src)
+  }
+  // Mirror to DOM for robust copy (MarkdownView reads data-src, survives re-render)
+  if (!el.hasAttribute('data-src') && src) {
+    try {
+      el.setAttribute('data-src', src)
+    } catch {
+      // ignore
+    }
+  }
+  // Also expose via dataset for direct JS access
+  try {
+    ;(el as unknown as Record<string, unknown>).__mermaidSrc = src
+  } catch {
+    // ignore
   }
   return src
 }
