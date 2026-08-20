@@ -68,7 +68,8 @@ function computeInlineFit(el: HTMLElement): number | null {
 }
 
 function getMermaidSource(el: HTMLElement): string {
-  return el.getAttribute('data-src') ?? el.querySelector('.mermaid-error-source code')?.textContent ?? el.textContent ?? ''
+  // Copy exactly the raw code from the markdown fence stored in data-src
+  return el.getAttribute('data-src') ?? ''
 }
 
 async function copyCode(btn: HTMLElement) {
