@@ -44,12 +44,13 @@ Platform: Linux / macOS, Chrome is the reference browser.
 No clone needed, always the latest (scoped package — `markdown-reader` on npm is taken):
 
 ```bash
-npx @jommar/markdown-reader --root /path/to/docs        # open a directory
-npx @jommar/markdown-reader --open /path/to/file.md     # root = dirname(file)
-npx @jommar/markdown-reader --port 3000 --root ./docs   # custom port
-npx @jommar/markdown-reader --help                      # help & version
+npx @jommar/markdown-reader@latest --root /path/to/docs        # open a directory
+npx @jommar/markdown-reader@latest --open /path/to/file.md     # root = dirname(file)
+npx @jommar/markdown-reader@latest --port 3000 --root ./docs   # custom port
+npx @jommar/markdown-reader@latest --help                      # help & version
 # after global install, short aliases work:
 # markdown-reader --root .   and   mdr --root .
+# (use @latest with npx on npm 11; bare `npx @jommar/markdown-reader` hits a scoped-bin npx bug)
 ```
 
 ### Global install
