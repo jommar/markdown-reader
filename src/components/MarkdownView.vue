@@ -68,8 +68,13 @@ function computeInlineFit(el: HTMLElement): number | null {
 }
 
 function getMermaidSource(el: HTMLElement): string {
-  // Copy exactly the raw code from the markdown fence stored in data-src
-  return el.getAttribute('data-src') ?? ''
+  // Exact markdown fence content stored in data-src (set by mermaidPlugin)
+  const src = el.getAttribute('data-src')
+  if (src !== null && src !== '') return src
+  // Fallback for error blocks where data-src may be empty; copy the displayed source
+  const code = el.querySelector<HTMLElement>('.mermaid-error-source code')?.textContent
+  if (code) return code
+  return src ?? ''
 }
 
 async function copyCode(btn: HTMLElement) {
@@ -84,8 +89,24 @@ async function copyCode(btn: HTMLElement) {
 
 async function copyMermaidSource(el: HTMLElement) {
   const src = getMermaidSource(el)
+  if (!src) {
+    workspace.showCopyToast('Nothing to copy')
+    return
+  }
   try {
-    await navigator.clipboard.writeText(src)
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(src)
+    } else {
+      const ta = document.createElement('textarea')
+      ta.value = src
+      ta.setAttribute('readonly', '')
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
     workspace.showCopyToast('Mermaid source copied')
   } catch {
     workspace.showCopyToast('Copy failed')
