@@ -374,6 +374,10 @@
   outline-offset: 1px;
 }
 
+.prose .copy-btn:active {
+  background: var(--bg-inset);
+}
+
 .prose .broken-link,
 .prose .unsupported-link {
   color: var(--fg-faint);
@@ -515,6 +519,10 @@
   border-color: var(--border-strong);
 }
 
+.prose pre.mermaid .mermaid-toolbar button:active {
+  background: var(--bg-inset);
+}
+
 .prose pre.mermaid .mermaid-toolbar button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
@@ -602,6 +610,11 @@
 }
 
 .prose .table-show-all:hover {
+  border-color: var(--accent);
+}
+
+.prose .table-show-all:active {
+  background: var(--bg-inset);
   border-color: var(--accent);
 }
 

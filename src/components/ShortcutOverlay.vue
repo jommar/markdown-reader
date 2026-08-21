@@ -129,7 +129,7 @@ function onKeydown(e: KeyboardEvent) {
         <div class="mt-4 flex justify-end">
           <button
             type="button"
-            class="border-border bg-bg-inset text-fg rounded-sm border px-3 py-1 text-[0.85rem]"
+            class="border-border bg-bg-inset text-fg hover:bg-bg-elev hover:text-fg active:bg-bg-inset focus-visible:outline-accent rounded-sm border px-3 py-1 text-[0.85rem] focus-visible:outline-2 focus-visible:outline-offset-1"
             @click="close"
           >
             Close

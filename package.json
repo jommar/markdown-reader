@@ -52,6 +52,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "@lucide/vue": "^1.33.0",
     "dompurify": "^3.2.0",
     "express": "^5.1.0",
     "github-slugger": "^2.0.0",

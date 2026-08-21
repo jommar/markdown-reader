@@ -79,7 +79,7 @@ defineExpose({
       v-if="showClear"
       type="button"
       aria-label="Clear"
-      class="text-fg-muted hover:text-fg absolute right-1 rounded-sm p-0.5 leading-none"
+      class="text-fg-muted hover:text-fg active:opacity-70 absolute right-1 rounded-sm p-0.5 leading-none"
       tabindex="-1"
       @click="onClear"
     >

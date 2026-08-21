@@ -55,7 +55,7 @@ onBeforeUnmount(() => {
       <li>
         <button
           type="button"
-          class="text-fg-muted hover:bg-bg-elev hover:text-fg max-w-22 truncate rounded p-0.5 px-1 [text-align:left] [direction:rtl]"
+          class="text-fg-muted hover:bg-bg-elev hover:text-fg active:bg-bg-inset max-w-22 truncate rounded p-0.5 px-1 [text-align:left] [direction:rtl]"
           :title="trail[0].entry.path"
           :aria-current="trail.length === 1 ? 'page' : undefined"
           @click="goTo(trail[0].index)"
@@ -66,7 +66,7 @@ onBeforeUnmount(() => {
       <li v-if="trail.length > 2" class="relative">
         <button
           type="button"
-          class="text-fg-faint hover:text-fg rounded px-1"
+          class="text-fg-faint hover:text-fg active:opacity-70 rounded px-1"
           :aria-expanded="showDropdown ? 'true' : 'false'"
           aria-label="Show full trail"
           @click="showDropdown = !showDropdown"
@@ -81,7 +81,7 @@ onBeforeUnmount(() => {
             <li v-for="(t, i) in trail" :key="i">
               <button
                 type="button"
-                class="text-fg-muted hover:bg-bg-inset hover:text-fg w-full truncate px-2.5 py-1 text-left font-mono text-xs"
+                class="text-fg-muted hover:bg-bg-inset hover:text-fg active:bg-bg-inset w-full truncate px-2.5 py-1 text-left font-mono text-xs"
                 :class="{ 'text-accent': t.index === trail[trail.length - 1].index }"
                 :title="t.entry.path"
                 :aria-current="t.index === trail[trail.length - 1].index ? 'page' : undefined"
@@ -97,7 +97,7 @@ onBeforeUnmount(() => {
       <li>
         <button
           type="button"
-          class="text-fg hover:bg-bg-elev max-w-22 truncate rounded p-0.5 px-1 [text-align:left] [direction:rtl]"
+          class="text-fg hover:bg-bg-elev active:bg-bg-inset max-w-22 truncate rounded p-0.5 px-1 [text-align:left] [direction:rtl]"
           :title="trail[trail.length - 1].entry.path"
           aria-current="page"
           @click="goTo(trail[trail.length - 1].index)"

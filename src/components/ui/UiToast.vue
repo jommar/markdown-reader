@@ -84,7 +84,7 @@ onBeforeUnmount(() => clearTimer())
       <button
         v-if="showUndo"
         type="button"
-        class="bg-accent text-bg focus-visible:outline-accent rounded-sm border-0 px-1.5 py-0.5 text-[0.85rem] focus-visible:outline-2 focus-visible:outline-offset-1"
+        class="bg-accent text-bg hover:opacity-90 active:opacity-70 focus-visible:outline-accent rounded-sm border-0 px-1.5 py-0.5 text-[0.85rem] focus-visible:outline-2 focus-visible:outline-offset-1"
         @click="emit('undo')"
       >
         Undo
@@ -92,7 +92,7 @@ onBeforeUnmount(() => clearTimer())
       <button
         v-if="showDismiss"
         type="button"
-        class="border-border bg-bg-inset text-fg-muted focus-visible:outline-accent rounded-sm border px-1.5 py-0.5 text-[0.85rem] focus-visible:outline-2 focus-visible:outline-offset-1"
+        class="border-border bg-bg-inset text-fg-muted hover:bg-bg-elev hover:text-fg active:bg-bg-inset focus-visible:outline-accent rounded-sm border px-1.5 py-0.5 text-[0.85rem] focus-visible:outline-2 focus-visible:outline-offset-1"
         @click="emit('dismiss')"
       >
         Dismiss

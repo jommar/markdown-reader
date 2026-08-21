@@ -275,6 +275,10 @@ onBeforeUnmount(() => {
   background: var(--bg);
 }
 
+.mermaid-fs-btn:active {
+  background: var(--bg-inset);
+}
+
 .mermaid-fs-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;

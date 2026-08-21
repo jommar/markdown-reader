@@ -108,7 +108,7 @@ watch(
   >
     <button
       type="button"
-      class="tree-row text-fg hover:bg-bg-elev relative flex w-full cursor-pointer items-center gap-1 border-0 bg-none py-0.5 pr-1 text-left"
+      class="tree-row text-fg hover:bg-bg-elev active:bg-bg-inset relative flex w-full cursor-pointer items-center gap-1 border-0 bg-none py-0.5 pr-1 text-left"
       :class="{ 'dir-row--ancestor': isAncestor }"
       :style="{ paddingLeft: `calc(var(--tree-indent) * ${depth} + var(--tree-row-pad))` }"
       :title="node.path"
@@ -180,7 +180,7 @@ watch(
       :class="
         pinned
           ? 'text-accent'
-          : 'text-fg-faint opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus:opacity-100'
+          : 'text-fg-faint opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus:opacity-100 active:opacity-70'
       "
       :title="pinned ? 'Unpin' : 'Pin'"
       @click.stop="togglePin"

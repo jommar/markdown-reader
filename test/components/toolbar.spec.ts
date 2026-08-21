@@ -74,7 +74,7 @@ describe('Toolbar', () => {
     const tabs = useTabs()
     tabs.navigate('docs/a.md')
     await wrapper.vm.$nextTick()
-    await wrapper.find('button[title="Copy path"]').trigger('click')
+    await wrapper.find('button[title^="Copy path"]').trigger('click')
     expect(writeText).toHaveBeenCalledWith('docs/a.md')
   })
 
@@ -86,7 +86,7 @@ describe('Toolbar', () => {
     const tabs = useTabs()
     tabs.navigate('docs/a.md')
     await wrapper.vm.$nextTick()
-    await wrapper.find('button[title="Copy path"]').trigger('click')
+    await wrapper.find('button[title^="Copy path"]').trigger('click')
     expect(workspace.copyToast).toBe('Path copied')
   })
 
@@ -98,8 +98,53 @@ describe('Toolbar', () => {
     const tabs = useTabs()
     tabs.navigate('docs/a.md')
     await wrapper.vm.$nextTick()
-    await wrapper.find('button[title="Copy path"]').trigger('click')
+    await wrapper.find('button[title^="Copy path"]').trigger('click')
     expect(workspace.copyToast).toBe('Copy failed')
+  })
+
+  test('copy swaps the icon to a check and reverts after 2s', async () => {
+    vi.useFakeTimers()
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    const wrapper = mountToolbar()
+    const tabs = useTabs()
+    tabs.navigate('docs/a.md')
+    await wrapper.vm.$nextTick()
+    const btn = wrapper.find('button[title^="Copy path"]')
+    expect(btn.find('svg').classes()).toContain('lucide-copy')
+    await btn.trigger('click')
+    await vi.advanceTimersByTimeAsync(0)
+    expect(wrapper.find('button[title="Copied"] svg').classes()).toContain('lucide-check')
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(wrapper.find('button[title^="Copy path"] svg').classes()).toContain('lucide-copy')
+    vi.useRealTimers()
+  })
+
+  test('shift+click copies the absolute path and shows the matching toast', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    const wrapper = mountToolbar()
+    const workspace = useWorkspace()
+    const tabs = useTabs()
+    workspace.root = '/home/me/docs'
+    tabs.navigate('a.md')
+    await wrapper.vm.$nextTick()
+    await wrapper.find('button[title^="Copy path"]').trigger('click', { shiftKey: true })
+    expect(writeText).toHaveBeenCalledWith('/home/me/docs/a.md')
+    expect(workspace.copyToast).toBe('Absolute path copied')
+  })
+
+  test('right-click copies the absolute path', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    const wrapper = mountToolbar()
+    const workspace = useWorkspace()
+    const tabs = useTabs()
+    workspace.root = '/home/me/docs/'
+    tabs.navigate('docs/a.md')
+    await wrapper.vm.$nextTick()
+    await wrapper.find('button[title^="Copy path"]').trigger('contextmenu')
+    expect(writeText).toHaveBeenCalledWith('/home/me/docs/docs/a.md')
   })
 
   test('zoom buttons step fontScale by 0.1', async () => {

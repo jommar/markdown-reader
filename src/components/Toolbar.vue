@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useTabs } from '../stores/tabs'
 import { useWorkspace } from '../stores/workspace'
 import { usePrefs } from '../stores/prefs'
@@ -30,13 +30,28 @@ const mtime = computed(() => {
   return new Date(workspace.currentMtimeMs).toLocaleString()
 })
 
-function copyPath() {
-  if (path.value) {
-    navigator.clipboard
-      .writeText(path.value)
-      .then(() => workspace.showCopyToast('Path copied'))
-      .catch(() => workspace.showCopyToast('Copy failed'))
-  }
+function absolutePath(): string {
+  return root.value ? `${root.value.replace(/\/+$/, '')}/${path.value}` : path.value
+}
+
+const copied = ref(false)
+let copiedTimer: ReturnType<typeof setTimeout> | null = null
+
+function copyPath(abs = false) {
+  if (!path.value) return
+  const text = abs ? absolutePath() : path.value
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      workspace.showCopyToast(abs ? 'Absolute path copied' : 'Path copied')
+      copied.value = true
+      if (copiedTimer) clearTimeout(copiedTimer)
+      copiedTimer = setTimeout(() => {
+        copied.value = false
+        copiedTimer = null
+      }, 2000)
+    })
+    .catch(() => workspace.showCopyToast('Copy failed'))
 }
 
 function zoom(delta: number) {
@@ -110,8 +125,14 @@ function toggleTheme() {
     <div class="flex-1 truncate [text-align:left] font-mono text-xs [direction:rtl]" :title="path">
       {{ path }}
     </div>
-    <UiButton class="shrink-0" title="Copy path" @click="copyPath">
-      <UiIcon name="copy" />
+    <UiButton
+      class="shrink-0"
+      :title="copied ? 'Copied' : 'Copy path (Shift+click or right-click for absolute path)'"
+      :class="copied ? 'text-success' : ''"
+      @click="copyPath($event.shiftKey)"
+      @contextmenu.prevent="copyPath(true)"
+    >
+      <UiIcon :name="copied ? 'check' : 'copy'" />
     </UiButton>
     <div v-if="mtime" class="text-fg-faint shrink-0 text-[0.72rem]" :title="`Modified ${mtime}`">
       {{ mtime }}

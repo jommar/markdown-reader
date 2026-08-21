@@ -154,7 +154,7 @@ function onEntryKeydown(e: KeyboardEvent, entry: HistoryEntry) {
               >
                 <button
                   type="button"
-                  class="text-accent shrink-0"
+                  class="text-accent hover:text-danger active:opacity-70 shrink-0"
                   :title="'Unpin'"
                   @click.stop="togglePin(e)"
                 >
@@ -174,7 +174,7 @@ function onEntryKeydown(e: KeyboardEvent, entry: HistoryEntry) {
                 </span>
                 <button
                   type="button"
-                  class="text-fg-faint hover:text-danger shrink-0"
+                  class="text-fg-faint hover:text-danger active:opacity-70 shrink-0"
                   title="Remove from history"
                   @click.stop="remove(e)"
                 >
@@ -202,7 +202,7 @@ function onEntryKeydown(e: KeyboardEvent, entry: HistoryEntry) {
               >
                 <button
                   type="button"
-                  class="text-fg-faint hover:text-accent shrink-0"
+                  class="text-fg-faint hover:text-accent active:opacity-70 shrink-0"
                   :title="'Pin'"
                   @click.stop="togglePin(e)"
                 >
@@ -222,7 +222,7 @@ function onEntryKeydown(e: KeyboardEvent, entry: HistoryEntry) {
                 </span>
                 <button
                   type="button"
-                  class="text-fg-faint hover:text-danger shrink-0"
+                  class="text-fg-faint hover:text-danger active:opacity-70 shrink-0"
                   title="Remove from history"
                   @click.stop="remove(e)"
                 >

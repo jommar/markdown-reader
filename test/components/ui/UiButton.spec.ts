@@ -38,6 +38,28 @@ describe('UiButton', () => {
     expect(wrapper.classes()).toContain('border-accent')
   })
 
+  test('active variant applies an accent tint background', () => {
+    const wrapper = mount(UiButton, { props: { active: true } })
+    expect(wrapper.classes()).toContain('bg-accent/15')
+  })
+
+  test('has a pressed (active) state per variant', () => {
+    expect(mount(UiButton).classes()).toContain('active:bg-bg-inset')
+    expect(mount(UiButton, { props: { variant: 'ghost' } }).classes()).toContain(
+      'active:bg-bg-inset',
+    )
+    expect(mount(UiButton, { props: { variant: 'primary' } }).classes()).toContain(
+      'active:opacity-80',
+    )
+  })
+
+  test('keeps accent text on hover while toggled active', () => {
+    const active = mount(UiButton, { props: { active: true } })
+    expect(active.classes()).toContain('hover:text-accent')
+    const inactive = mount(UiButton)
+    expect(inactive.classes()).not.toContain('hover:text-accent')
+  })
+
   test('extra classes merge onto the button root', () => {
     const wrapper = mount(UiButton, { props: { disabled: true }, attrs: { title: 'Back (Alt+←)' } })
     expect(wrapper.attributes('title')).toBe('Back (Alt+←)')

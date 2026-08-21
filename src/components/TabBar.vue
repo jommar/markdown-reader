@@ -35,7 +35,7 @@ function onAuxClick(e: MouseEvent, id: string) {
       <span class="overflow-hidden text-ellipsis">{{ titles[i] || 'New tab' }}</span>
       <button
         type="button"
-        class="text-fg-faint hover:text-danger cursor-pointer border-0 bg-none p-0 text-[0.9rem] leading-none"
+        class="text-fg-faint hover:text-danger active:opacity-70 focus-visible:outline-accent cursor-pointer border-0 bg-none p-0 text-[0.9rem] leading-none focus-visible:outline-2 focus-visible:outline-offset-1"
         :aria-label="`Close tab ${titles[i] || 'New tab'}`"
         title="Close tab"
         @click.stop="tabs.closeTab(t.id)"
@@ -45,7 +45,7 @@ function onAuxClick(e: MouseEvent, id: string) {
     </div>
     <button
       type="button"
-      class="border-border text-fg-muted hover:border-border-strong hover:text-fg size-6 shrink-0 cursor-pointer rounded border bg-none"
+      class="border-border text-fg-muted hover:border-border-strong hover:text-fg active:bg-bg-inset size-6 shrink-0 cursor-pointer rounded border bg-none"
       title="New tab"
       @click="tabs.newBlankTab()"
     >
