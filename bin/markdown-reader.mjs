@@ -87,6 +87,34 @@ if (hasFlag(argv, '--version', '-v', '--verson')) {
   process.exit(0)
 }
 
+// Node 22.6+ enables native type stripping by default but refuses to strip
+// files under node_modules (ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING).
+// This package ships server/*.ts and relies on tsx, so we must disable
+// native stripping and let tsx handle it. Re-exec with --no-strip-types
+// + --import tsx when the flags are supported and not already present.
+// --no-strip-types alone leaves .ts as ERR_UNKNOWN_FILE_EXTENSION; the
+// dynamic `await import('tsx/esm/api')` below is not enough on Node 25
+// when native stripping is disabled, so we need the --import hook.
+// Placed after --help/--version so those remain fast and work even if
+// tsx is missing.
+if (!process.execArgv.includes('--no-strip-types')) {
+  let flagAllowed = false
+  try {
+    // @ts-ignore - not in older @types/node
+    flagAllowed = !!process.allowedNodeEnvironmentFlags?.has('--no-strip-types')
+  } catch {
+    flagAllowed = false
+  }
+  if (flagAllowed) {
+    const hasTsxImport = process.execArgv.some((a) => a.includes('tsx'))
+    const reExecArgs = ['--no-strip-types']
+    if (!hasTsxImport) reExecArgs.push('--import', 'tsx')
+    reExecArgs.push(...process.argv.slice(1))
+    const res = spawnSync(process.execPath, reExecArgs, { stdio: 'inherit' })
+    if (!res.error) process.exit(res.status ?? 0)
+  }
+}
+
 // Map --port/--host to env for server/index.ts (it reads process.env.PORT/HOST)
 // Keep original argv intact — server also handles --root/--open via parseArgs().
 const { port, host } = parsePortHost(argv)
