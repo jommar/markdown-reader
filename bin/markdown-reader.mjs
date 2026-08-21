@@ -115,6 +115,11 @@ if (!process.execArgv.includes('--no-strip-types')) {
   }
 }
 
+// Default to production for global/npx installs (dist/ is prebuilt).
+// Dev uses `npm run dev` (tsx watch) which sets its own env; without this,
+// global installs would try to import vite (devDependency, not installed).
+if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production'
+
 // Map --port/--host to env for server/index.ts (it reads process.env.PORT/HOST)
 // Keep original argv intact — server also handles --root/--open via parseArgs().
 const { port, host } = parsePortHost(argv)
