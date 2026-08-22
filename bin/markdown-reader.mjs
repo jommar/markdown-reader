@@ -108,7 +108,16 @@ if (!process.execArgv.includes('--no-strip-types')) {
   if (flagAllowed) {
     const hasTsxImport = process.execArgv.some((a) => a.includes('tsx'))
     const reExecArgs = ['--no-strip-types']
-    if (!hasTsxImport) reExecArgs.push('--import', 'tsx')
+    if (!hasTsxImport) {
+      try {
+        // --import specifiers resolve against CWD, so a bare 'tsx' breaks when
+        // the CLI runs outside the install dir. Resolve against this file instead.
+        reExecArgs.push('--import', import.meta.resolve('tsx'))
+      } catch {
+        // tsx unresolvable — run without the hook; the import below hits the
+        // friendly missing-dependency error instead of a raw crash
+      }
+    }
     reExecArgs.push(...process.argv.slice(1))
     const res = spawnSync(process.execPath, reExecArgs, { stdio: 'inherit' })
     if (!res.error) process.exit(res.status ?? 0)
